@@ -6,8 +6,6 @@ from operator import itemgetter
 from binaryninja import *
 import re
 
-# [TODO] Make configurable
-DEPTH = 4
 INSTR_SIZE = 4
 # This is a JALR in t9
 # [ŦODO] Add jumps to other registers even if they are rare
@@ -71,7 +69,7 @@ class ROPSearch(BackgroundTaskThread):
         decrement index from ret ins and calculate gadgets
         """
         ret_addr += 4 
-        for i in range(0, DEPTH*INSTR_SIZE + 1):
+        for i in range(0, Settings().get_integer("ropsettings.depth")*INSTR_SIZE + 1):
             #  MIPS has jump delay slots, this means that the instruction 
             # immediatly after the jump is executed with the jump
             instructions = self._disas_all_instrs(ret_addr - i, ret_addr + 4)
@@ -136,6 +134,7 @@ class ROPSearch(BackgroundTaskThread):
         lia0_gadets = ""
         registers_gadgets = ""
         system_gadgets = ""
+        double_jump_gadgets = ""
         all_gadgets = ""
         found = []
         gadgets = dict(sorted(gadgets.items()))
@@ -162,6 +161,9 @@ class ROPSearch(BackgroundTaskThread):
                 # system
                 if "addiu $a0, $sp" in f_gadget_str:
                     system_gadgets += f_gadget_str
+                # double jumps
+                if re.search(r"(jr|jalr).+(jr|jalr)", f_gadget_str):
+                    double_jump_gadgets += f_gadget_str
                 # tails?
                 found.append(gadget)
 
@@ -182,6 +184,10 @@ class ROPSearch(BackgroundTaskThread):
 
         markdown += "[+] system gadgets\n\n"
         markdown += system_gadgets
+        markdown += "***\n\n"
+
+        markdown += "[+] double jump gadgets\n\n"
+        markdown += double_jump_gadgets
         markdown += "***\n\n"
 
         markdown += "[+] all gadgets\n\n"

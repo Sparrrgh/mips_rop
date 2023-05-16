@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (QLineEdit, QPushButton, QApplication, QWidget,
 from PySide6.QtCore import (QDir, Qt, QFileInfo, QItemSelectionModel, QSettings, QUrl)
 from PySide6.QtGui import (QFontMetrics, QDesktopServices, QKeySequence, QIcon, QColor, QAction)
 
+
 # https://github.com/Vector35/snippets/blob/a10096727be5bb8d17c88fab33ed43ff12a736e4/__init__.py#L190
 
 class RopSettings(QDialog):
@@ -26,7 +27,22 @@ class RopSettings(QDialog):
         self.setWindowTitle(self.title.text())
         self.columns = 2
         self.context = context
-        self.depth = QLineEdit("2")
+
+        Settings().register_group("ropsettings", "ROP settings")
+
+        Settings().register_setting("ropsettings.depth", """
+            {
+                "title" : "Depth of gadget search",
+                "type" : "number",
+                "default" : 4,
+                "description" : "Maximum depth of the gadgets that will be searched",
+                "ignore" : ["SettingsProjectScope", "SettingsResourceScope"]
+            }
+            """)
+
+        depth = Settings().get_integer("ropsettings.depth")
+        print(depth)
+        self.depth = QLineEdit(f"{depth}")
 
         font = getMonospaceFont(self)
         font = QFontMetrics(font)
@@ -62,7 +78,8 @@ class RopSettings(QDialog):
         self.settings = QSettings("", "mips_rop")
         
     def save(self):
-        self.depth = self
+        Settings().set_integer("ropsettings.depth", int(self.depth.text()))
+        self.close()
 
 def openSettings(context):
     settings = RopSettings(context, parent=context.widget)
