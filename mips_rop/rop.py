@@ -11,7 +11,7 @@ DEPTH = 4
 INSTR_SIZE = 4
 # This is a JALR in t9
 # [ŦODO] Add jumps to other registers even if they are rare
-_RET_INSTRS = {"jalr": [b"\x03\x20\xf8\x09"]}
+_RET_INSTRS = {"jalr t9": [b"\x03\x20\xf8\x09"], "jr t9" : [b"\x03\x20\x00\x08"]}
 
 class ROPSearch(BackgroundTaskThread):
     """
@@ -132,7 +132,10 @@ class ROPSearch(BackgroundTaskThread):
         """
         markdown = f"rop gadgets found for {self.bv.file.filename}\n\n"
         body = ""
-        move_gadgets = ""
+        stackfinder_gadgets = ""
+        lia0_gadets = ""
+        registers_gadgets = ""
+        system_gadgets = ""
         all_gadgets = ""
         found = []
         gadgets = dict(sorted(gadgets.items()))
@@ -147,14 +150,38 @@ class ROPSearch(BackgroundTaskThread):
                 )
                 all_gadgets += f_gadget_str
 
-                if "move" in f_gadget_str:
-                    move_gadgets += f_gadget_str
-
+                # stackfinder
+                if re.search(r"addiu \$.*, \$sp", f_gadget_str):
+                    stackfinder_gadgets += f_gadget_str
+                # lia0
+                if "li $a0" in f_gadget_str:
+                    lia0_gadets += f_gadget_str
+                # registers
+                if re.search(r"lw \$.*, 0x[0-9a-z]{0,4}\(\$sp", f_gadget_str):
+                    registers_gadgets += f_gadget_str
+                # system
+                if "addiu $a0, $sp" in f_gadget_str:
+                    system_gadgets += f_gadget_str
+                # tails?
                 found.append(gadget)
+
+
         markdown += f"[+] found {len(found)} gadgets\n***\n"
 
-        markdown += "[+] move gadgets\n\n"
-        markdown += move_gadgets
+        markdown += "[+] stackfinder gadgets\n\n"
+        markdown += stackfinder_gadgets
+        markdown += "***\n\n"
+
+        markdown += "[+] lia0 gadgets\n\n"
+        markdown += lia0_gadets
+        markdown += "***\n\n"
+
+        markdown += "[+] registers gadgets\n\n"
+        markdown += registers_gadgets
+        markdown += "***\n\n"
+
+        markdown += "[+] system gadgets\n\n"
+        markdown += system_gadgets
         markdown += "***\n\n"
 
         markdown += "[+] all gadgets\n\n"
