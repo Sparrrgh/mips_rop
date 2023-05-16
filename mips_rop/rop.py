@@ -151,13 +151,13 @@ class ROPSearch(BackgroundTaskThread):
                 all_gadgets += f_gadget_str
 
                 # stackfinder
-                if re.search(r"addiu \$.*, \$sp", f_gadget_str):
+                if re.search(r"addiu \$.., \$sp", f_gadget_str):
                     stackfinder_gadgets += f_gadget_str
                 # lia0
                 if "li $a0" in f_gadget_str:
                     lia0_gadets += f_gadget_str
                 # registers
-                if re.search(r"lw \$.*, 0x[0-9a-z]{0,4}\(\$sp", f_gadget_str):
+                if re.search(r"lw \$.., 0x[0-9a-z]{0,4}\(\$sp", f_gadget_str):
                     registers_gadgets += f_gadget_str
                 # system
                 if "addiu $a0, $sp" in f_gadget_str:
