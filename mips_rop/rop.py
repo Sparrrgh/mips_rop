@@ -70,7 +70,7 @@ class ROPSearch(BackgroundTaskThread):
         """
         jump_instr = self.bv.get_disassembly(jump_addr)
         jump_addr += 4
-        # [TODO] and $.., $.., $.. is also a possible way load values
+        # [TODO] and $reg_dest, $reg_source, $reg_source is also a possible way load values
         # addiu comes from https://write.lain.faith/~/Haskal/mips-rop/
         t9_ctrl = [r"move +\$t9, ", r"addiu +\$t9, ",
                    r"or +\$t9, \$.., \$zero"]
@@ -155,14 +155,8 @@ class ROPSearch(BackgroundTaskThread):
             if gadget not in found:
                 gadget_str = " ".join(gadget[0].split())
                 addr = addr + self.bv.start  # make sure addrs are correct
-                if len(gadget[1]) < 4:
-                    f_gadget_str = (
-                        f"[0x{addr:016x}](binaryninja://?expr={addr:08x})  \tControl reg: <span style='color: green;'>{gadget[1]}</span>\t\t\t{gadget_str}\n\n"
-                    )
-                else:
-                    f_gadget_str = (
-                        f"[0x{addr:016x}](binaryninja://?expr={addr:08x})  \tControl reg: <span style='color: green;'>{gadget[1]}</span>\t\t{gadget_str}\n\n"
-                    )
+                control_reg = f"Control reg: <span style='color: green;'>{gadget[1]}</span>"
+                f_gadget_str = f"[{addr:#016x}](binaryninja://?expr={addr:08x}) \t{control_reg:85} \t{gadget_str}\n\n"
                 all_gadgets += f_gadget_str
 
                 # stackfinder
